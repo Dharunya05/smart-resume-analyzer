@@ -118,9 +118,14 @@ if uploaded_file and job_desc:
     status.success("✅ Analysis completed!")
     st.divider()
 
-    # Output section
+        # Output section
     st.subheader("🛠️ Extracted Skills")
-    st.write(", ".join(resume_skills) if resume_skills else "No skills detected")
+
+    if resume_skills:
+        for skill in resume_skills:
+            st.write("•", skill)
+    else:
+        st.write("No skills detected")
 
     st.subheader("📈 Resume Match Score")
     st.metric(label="Match Percentage", value=f"{score}%")
@@ -130,14 +135,16 @@ if uploaded_file and job_desc:
     with col1:
         st.subheader("🟢 Matched Skills")
         if matched:
-            st.success(", ".join(s.upper() for s in matched))
+            for skill in matched:
+                st.success(skill.upper())
         else:
             st.write("No matched skills found")
 
     with col2:
         st.subheader("🔴 Missing Skills")
         if missing:
-            st.error(", ".join(s.upper() for s in missing))
+            for skill in missing:
+                st.error(skill.upper())
         else:
             st.write("No missing skills 🎉")
 
