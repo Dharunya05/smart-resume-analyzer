@@ -58,15 +58,54 @@ learning_roadmap = {
 
 st.title("📄 Smart Resume Analyzer & Skill Gap Detector")
 
+st.markdown("""
+### 🔍 What this app does
+Upload your resume and compare it with a job description to:
+- Extract technical skills from your resume
+- Identify matched and missing skills
+- Calculate resume–job match percentage
+- Get a personalized learning roadmap
+
+### 📌 Instructions
+1. Upload a **text-based PDF resume**
+2. Paste the **Job Description**
+3. View skill analysis and recommendations
+""")
+
+st.info("ℹ️ Note: Currently supports text-based resumes. Scanned/image-based resumes will be added in future versions.")
+
 uploaded_file = st.file_uploader("Upload your Resume (PDF)", type="pdf")
 job_desc = st.text_area("Paste Job Description")
 
+if uploaded_file and not job_desc.strip():
+    st.warning("⚠️ Please paste a Job Description to continue.")
+    st.stop()
+
 if uploaded_file and job_desc:
+
+    progress = st.progress(0)
+    status = st.empty()
+
+    # Step 1: Read resume
+    status.info("📄 Reading resume...")
     resume_text = extract_text_from_pdf(uploaded_file)
     resume_text = clean_text(resume_text)
+    progress.progress(30)
 
+    if not resume_text.strip():
+        st.error("❌ No readable text found in the resume. Please upload a text-based PDF.")
+        st.stop()
+
+    # Step 2: Extract skills
+    status.info("🧠 Extracting skills...")
     resume_skills = extract_skills(resume_text)
+    progress.progress(60)
 
+    if not resume_skills:
+        st.warning("⚠️ No matching technical skills found in the resume.")
+
+    # Step 3: Compare skills
+    status.info("📊 Comparing with job description...")
     job_skills = [
         "python", "sql", "machine learning",
         "deep learning", "tableau", "statistics"
@@ -74,18 +113,33 @@ if uploaded_file and job_desc:
 
     matched, missing = skill_gap_analysis(resume_skills, job_skills)
     score = calculate_match_score(matched, len(job_skills))
+    progress.progress(100)
 
-    st.subheader("✅ Extracted Skills")
-    st.write(resume_skills)
+    status.success("✅ Analysis completed!")
+    st.divider()
 
-    st.subheader("📊 Resume Match Score")
-    st.success(f"{score}% Match")
+    # Output section
+    st.subheader("🛠️ Extracted Skills")
+    st.write(", ".join(resume_skills) if resume_skills else "No skills detected")
 
-    st.subheader("🟢 Matched Skills")
-    st.write([s.upper() for s in matched])
+    st.subheader("📈 Resume Match Score")
+    st.metric(label="Match Percentage", value=f"{score}%")
 
-    st.subheader("🔴 Missing Skills")
-    st.write([s.upper() for s in missing])
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("🟢 Matched Skills")
+        if matched:
+            st.success(", ".join(s.upper() for s in matched))
+        else:
+            st.write("No matched skills found")
+
+    with col2:
+        st.subheader("🔴 Missing Skills")
+        if missing:
+            st.error(", ".join(s.upper() for s in missing))
+        else:
+            st.write("No missing skills 🎉")
 
     st.subheader("📘 Learning Roadmap")
     for skill in missing:
