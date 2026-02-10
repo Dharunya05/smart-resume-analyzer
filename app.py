@@ -24,6 +24,13 @@ def extract_skills(text):
     ]
     return [skill.upper() for skill in skills_list if skill in text]
 
+def skill_frequency(text, skills):
+    frequency = {}
+    for skill in skills:
+        count = text.count(skill.lower())
+        frequency[skill.upper()] = count
+    return frequency
+
 def skill_gap_analysis(resume_skills, job_skills):
     resume_set = set(skill.lower() for skill in resume_skills)
     job_set = set(skill.lower() for skill in job_skills)
@@ -37,6 +44,14 @@ def calculate_match_score(matched, total):
     if total == 0:
         return 0
     return round((len(matched) / total) * 100, 2)
+
+def get_skill_strength(count):
+    if count >= 4:
+        return "High"
+    elif count >= 2:
+        return "Medium"
+    else:
+        return "Low"
 
 learning_roadmap = {
     "deep learning": [
@@ -99,6 +114,7 @@ if uploaded_file and job_desc:
     # Step 2: Extract skills
     status.info("🧠 Extracting skills...")
     resume_skills = extract_skills(resume_text)
+    skill_freq = skill_frequency(resume_text, resume_skills)
     progress.progress(60)
 
     if not resume_skills:
@@ -106,10 +122,18 @@ if uploaded_file and job_desc:
 
     # Step 3: Compare skills
     status.info("📊 Comparing with job description...")
-    job_skills = [
-        "python", "sql", "machine learning",
-        "deep learning", "tableau", "statistics"
-    ]
+
+    job_desc_clean = clean_text(job_desc)
+    job_skills = extract_skills(job_desc_clean)
+
+    if not job_skills:
+        st.error("❌ No recognizable skills found in Job Description.")
+        st.stop()
+
+    from collections import Counter
+    job_skill_counts = {}
+    for skill in job_skills:
+        job_skill_counts[skill] = job_desc_clean.count(skill.lower())
 
     matched, missing = skill_gap_analysis(resume_skills, job_skills)
     score = calculate_match_score(matched, len(job_skills))
@@ -118,7 +142,7 @@ if uploaded_file and job_desc:
     status.success("✅ Analysis completed!")
     st.divider()
 
-        # Output section
+    # Output section
     st.subheader("🛠️ Extracted Skills")
 
     if resume_skills:
@@ -126,6 +150,18 @@ if uploaded_file and job_desc:
             st.write("•", skill)
     else:
         st.write("No skills detected")
+    
+    st.subheader("💪 Skill Strength Analysis")
+
+    for skill, count in skill_freq.items():
+        strength = get_skill_strength(count)
+
+        if strength == "High":
+            st.success(f"{skill} → {strength} ({count} mentions)")
+        elif strength == "Medium":
+            st.info(f"{skill} → {strength} ({count} mentions)")
+        else:
+            st.warning(f"{skill} → {strength} ({count} mentions)")
 
     st.subheader("📈 Resume Match Score")
     st.metric(label="Match Percentage", value=f"{score}%")
@@ -147,6 +183,14 @@ if uploaded_file and job_desc:
                 st.error(skill.upper())
         else:
             st.write("No missing skills 🎉")
+
+    st.subheader("📊 Skill Coverage Visualization")
+    for skill, count in job_skill_counts.items():
+        strength = get_skill_strength(count)
+        progress_value = min(count / 4, 1.0)
+
+        st.write(skill.upper(), "-", strength)
+        st.progress(progress_value)
 
     st.subheader("📘 Learning Roadmap")
     for skill in missing:
