@@ -98,6 +98,23 @@ learning_roadmap = {
     ]
 }
 
+def default_roadmap(skill):
+    return [
+        f"Understand basics of {skill}",
+        f"Learn core concepts and terminology",
+        f"Practice hands-on exercises or mini projects",
+        f"Explore real-world use cases of {skill}",
+        f"Build at least one project using {skill}"
+    ]
+
+def learning_links(skill):
+    skill_query = skill.replace(" ", "+")
+    return {
+        "YouTube": f"https://www.youtube.com/results?search_query={skill_query}+tutorial",
+        "Coursera": f"https://www.coursera.org/search?query={skill_query}",
+        "Google": f"https://www.google.com/search?q=learn+{skill_query}"
+    }
+
 st.title("📄 Smart Resume Analyzer & Skill Gap Detector")
 
 st.markdown("""
@@ -228,8 +245,25 @@ if uploaded_file and job_desc:
         st.progress(progress_value)
 
     st.subheader("📘 Learning Roadmap")
+
     for skill in missing:
+        st.markdown(f"### 🔹 {skill.upper()}")
+
+        # Case 1: Curated roadmap exists
         if skill in learning_roadmap:
-            st.markdown(f"**{skill.upper()}**")
             for step in learning_roadmap[skill]:
                 st.write("•", step)
+
+        # Case 2: Default roadmap (fallback)
+        else:
+            steps = default_roadmap(skill)
+            for step in steps:
+                st.write("•", step)
+
+            links = learning_links(skill)
+            st.markdown(
+                f"[🎥 YouTube]({links['YouTube']}) | "
+                f"[🎓 Coursera]({links['Coursera']}) | "
+                f"[🌐 Google]({links['Google']})"
+            )
+
