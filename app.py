@@ -2,6 +2,9 @@ import streamlit as st
 import pdfplumber
 import re
 
+from pdf2image import convert_from_bytes
+import pytesseract
+
 def extract_text_from_pdf(uploaded_file):
     text = ""
     with pdfplumber.open(uploaded_file) as pdf:
@@ -10,6 +13,30 @@ def extract_text_from_pdf(uploaded_file):
             if page_text:
                 text += page_text + "\n"
     return text
+
+def extract_text_with_ocr(uploaded_file, max_pages=5):
+    try:
+        images = convert_from_bytes(uploaded_file.read())
+
+        ocr_text = ""
+        for i, image in enumerate(images):
+            if i >= max_pages:
+                break
+            page_text = pytesseract.image_to_string(image, lang="eng")
+            ocr_text += page_text + "\n"
+
+        return ocr_text
+
+    except Exception as e:
+        return ""
+
+def get_resume_text(uploaded_file):
+    text = extract_text_from_pdf(uploaded_file)
+
+    if not text or len(text.strip()) < 100:
+        return None, "ocr"
+
+    return text, "pdf"
 
 def clean_text(text):
     text = re.sub(r'\s+', ' ', text)
@@ -103,12 +130,20 @@ if uploaded_file and job_desc:
 
     # Step 1: Read resume
     status.info("📄 Reading resume...")
-    resume_text = extract_text_from_pdf(uploaded_file)
+    resume_text, method = get_resume_text(uploaded_file)
+
+    if method == "ocr":
+        status.warning("🖼️ Scanned resume detected.")
+        status.info("🔍 Trying OCR extraction...")
+        resume_text = extract_text_with_ocr(uploaded_file)
+
     resume_text = clean_text(resume_text)
     progress.progress(30)
-
-    if not resume_text.strip():
-        st.error("❌ No readable text found in the resume. Please upload a text-based PDF.")
+    
+    # Step 1.5: Validate extracted text
+    if not resume_text or not resume_text.strip():
+        st.error("❌ Unable to extract readable text from resume.")
+        st.info("Try uploading a clearer PDF or a text-based resume.")
         st.stop()
 
     # Step 2: Extract skills
