@@ -43,13 +43,60 @@ def clean_text(text):
     text = re.sub(r'[^a-zA-Z0-9+.# ]', '', text)
     return text.lower()
 
-def extract_skills(text):
-    skills_list = [
-        "python", "sql", "power bi", "excel",
-        "machine learning", "data science",
-        "artificial intelligence", "statistics"
+SKILL_CATEGORIES = {
+    "programming": [
+        "python", "java", "c", "c++", "javascript"
+    ],
+    "data": [
+        "sql", "machine learning", "data science",
+        "artificial intelligence", "deep learning"
+    ],
+    "tools": [
+        "power bi", "excel", "tableau", "canva"
+    ],
+    "cloud": [
+        "aws", "azure", "gcp"
+    ],
+    "frameworks": [
+        "react", "react native"
+    ],
+    "roles": [
+        "business analyst", "data analyst", "software engineer"
     ]
-    return [skill.upper() for skill in skills_list if skill in text]
+}
+
+def extract_skills_dynamic(text):
+    text = text.lower()
+    found_skills = set()
+
+    # Step 1: Flatten category skills
+    category_skills = {}
+    for category, skills in SKILL_CATEGORIES.items():
+        for skill in skills:
+            category_skills[skill] = category
+
+    # Step 2: Exact phrase matching (important for ML, Power BI etc.)
+    for skill in category_skills:
+        if skill in text:
+            found_skills.add(skill)
+
+    # Step 3: Section-based extraction (skills section)
+    section_keywords = ["skills", "technologies", "tools", "expertise", "technical skills"]
+    for keyword in section_keywords:
+        if keyword in text:
+            section_text = text.split(keyword, 1)[1][:300]
+            for part in re.split(r",|\n|•|-", section_text):
+                part = part.strip()
+                if part in category_skills:
+                    found_skills.add(part)
+
+    categorized = {}
+    for skill in found_skills:
+        for category, skills in SKILL_CATEGORIES.items():
+            if skill in skills:
+                categorized.setdefault(category, []).append(skill.upper())
+
+    return categorized
 
 def skill_frequency(text, skills):
     frequency = {}
@@ -165,7 +212,8 @@ if uploaded_file and job_desc:
 
     # Step 2: Extract skills
     status.info("🧠 Extracting skills...")
-    resume_skills = extract_skills(resume_text)
+    resume_skills_by_category = extract_skills_dynamic(resume_text)
+    resume_skills = [s for skills in resume_skills_by_category.values() for s in skills]
     skill_freq = skill_frequency(resume_text, resume_skills)
     progress.progress(60)
 
@@ -176,7 +224,8 @@ if uploaded_file and job_desc:
     status.info("📊 Comparing with job description...")
 
     job_desc_clean = clean_text(job_desc)
-    job_skills = extract_skills(job_desc_clean)
+    job_skills_by_category = extract_skills_dynamic(job_desc_clean)
+    job_skills = [s for skills in job_skills_by_category.values() for s in skills]
 
     if not job_skills:
         st.error("❌ No recognizable skills found in Job Description.")
