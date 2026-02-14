@@ -65,6 +65,14 @@ SKILL_CATEGORIES = {
     ]
 }
 
+STOPWORDS = {
+    "resume", "project", "projects", "experience", "internship",
+    "education", "year", "years", "months",
+    "college", "university", "school",
+    "skills", "tools", "technologies",
+    "profile", "summary", "objective"
+}
+
 def extract_skills_dynamic(text):
     text = text.lower()
     found_skills = set()
@@ -97,6 +105,32 @@ def extract_skills_dynamic(text):
                 categorized.setdefault(category, []).append(skill.upper())
 
     return categorized
+
+def extract_uncategorized_skills(text, categorized_skills):
+    """
+    Detect skills that are not present in predefined categories
+    """
+    # All known skills (flatten)
+    known_skills = set()
+    for skills in SKILL_CATEGORIES.values():
+        for s in skills:
+            known_skills.add(s.lower())
+
+    # Extract candidate words (capitalized / technical-looking)
+    words = re.findall(r'\b[a-zA-Z][a-zA-Z+.#]{1,}\b', text)
+
+    others = set()
+    for word in words:
+        w = word.lower()
+        if (
+            w not in known_skills and
+            w not in STOPWORDS and
+            len(w) > 1 and
+            w not in categorized_skills
+        ):
+            others.add(w.upper())
+
+    return sorted(others)
 
 def skill_frequency(text, skills):
     frequency = {}
@@ -214,6 +248,12 @@ if uploaded_file and job_desc:
     status.info("🧠 Extracting skills...")
     resume_skills_by_category = extract_skills_dynamic(resume_text)
     resume_skills = [s for skills in resume_skills_by_category.values() for s in skills]
+
+    uncategorized_skills = extract_uncategorized_skills(
+        resume_text,
+        [s.lower() for s in resume_skills]
+    )
+
     skill_freq = skill_frequency(resume_text, resume_skills)
     progress.progress(60)
 
@@ -252,6 +292,14 @@ if uploaded_file and job_desc:
     else:
         st.write("No skills detected")
     
+    st.subheader("📦 Other Detected Skills (Uncategorized)")
+
+    if uncategorized_skills:
+        for skill in uncategorized_skills:
+            st.write("•", skill)
+    else:
+        st.write("No uncategorized skills detected")
+
     st.subheader("💪 Skill Strength Analysis")
 
     for skill, count in skill_freq.items():
