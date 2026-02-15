@@ -43,34 +43,61 @@ def clean_text(text):
     text = re.sub(r'[^a-zA-Z0-9+.# ]', '', text)
     return text.lower()
 
+def normalize_skill(skill):
+    skill = skill.lower().strip()
+    return SKILL_SYNONYMS.get(skill, skill)
+
 SKILL_CATEGORIES = {
-    "programming": [
-        "python", "java", "c", "c++", "javascript"
+
+    "programming_languages": [
+        "python", "java", "c", "c++", "javascript", "typescript"
     ],
-    "data": [
-        "sql", "machine learning", "data science",
-        "artificial intelligence", "deep learning"
+
+    "data_analytics": [
+        "sql", "excel", "power bi", "tableau"
     ],
-    "tools": [
-        "power bi", "excel", "tableau", "canva"
+
+    "data_science_ml": [
+        "machine learning", "data science",
+        "artificial intelligence", "deep learning", "statistics"
     ],
-    "cloud": [
-        "aws", "azure", "gcp"
+
+    "web_development": [
+        "html", "css", "react", "react native", "node js"
     ],
-    "frameworks": [
-        "react", "react native"
+
+    "cloud_devops": [
+        "aws", "azure", "gcp", "docker", "kubernetes"
     ],
-    "roles": [
+
+    "databases": [
+        "mysql", "postgresql", "mongodb"
+    ],
+
+    "tools_platforms": [
+        "git", "github", "jira", "canva"
+    ],
+
+    "business_roles": [
         "business analyst", "data analyst", "software engineer"
     ]
 }
 
-STOPWORDS = {
-    "resume", "project", "projects", "experience", "internship",
-    "education", "year", "years", "months",
-    "college", "university", "school",
-    "skills", "tools", "technologies",
-    "profile", "summary", "objective"
+SKILL_SYNONYMS = {
+    "ml": "machine learning",
+    "machine-learning": "machine learning",
+    "machinelearning": "machine learning",
+
+    "ai": "artificial intelligence",
+    "artificial-intelligence": "artificial intelligence",
+
+    "powerbi": "power bi",
+    "power-bi": "power bi",
+
+    "reactjs": "react",
+    "react.js": "react",
+
+    "js": "javascript"
 }
 
 def extract_skills_dynamic(text):
@@ -86,7 +113,8 @@ def extract_skills_dynamic(text):
     # Step 2: Exact phrase matching (important for ML, Power BI etc.)
     for skill in category_skills:
         if skill in text:
-            found_skills.add(skill)
+            normalized = normalize_skill(skill)
+            found_skills.add(normalized)
 
     # Step 3: Section-based extraction (skills section)
     section_keywords = ["skills", "technologies", "tools", "expertise", "technical skills"]
@@ -96,7 +124,7 @@ def extract_skills_dynamic(text):
             for part in re.split(r",|\n|•|-", section_text):
                 part = part.strip()
                 if part in category_skills:
-                    found_skills.add(part)
+                    found_skills.add(normalize_skill(part))
 
     categorized = {}
     for skill in found_skills:
@@ -105,32 +133,6 @@ def extract_skills_dynamic(text):
                 categorized.setdefault(category, []).append(skill.upper())
 
     return categorized
-
-def extract_uncategorized_skills(text, categorized_skills):
-    """
-    Detect skills that are not present in predefined categories
-    """
-    # All known skills (flatten)
-    known_skills = set()
-    for skills in SKILL_CATEGORIES.values():
-        for s in skills:
-            known_skills.add(s.lower())
-
-    # Extract candidate words (capitalized / technical-looking)
-    words = re.findall(r'\b[a-zA-Z][a-zA-Z+.#]{1,}\b', text)
-
-    others = set()
-    for word in words:
-        w = word.lower()
-        if (
-            w not in known_skills and
-            w not in STOPWORDS and
-            len(w) > 1 and
-            w not in categorized_skills
-        ):
-            others.add(w.upper())
-
-    return sorted(others)
 
 def skill_frequency(text, skills):
     frequency = {}
@@ -249,11 +251,6 @@ if uploaded_file and job_desc:
     resume_skills_by_category = extract_skills_dynamic(resume_text)
     resume_skills = [s for skills in resume_skills_by_category.values() for s in skills]
 
-    uncategorized_skills = extract_uncategorized_skills(
-        resume_text,
-        [s.lower() for s in resume_skills]
-    )
-
     skill_freq = skill_frequency(resume_text, resume_skills)
     progress.progress(60)
 
@@ -292,14 +289,6 @@ if uploaded_file and job_desc:
     else:
         st.write("No skills detected")
     
-    st.subheader("📦 Other Detected Skills (Uncategorized)")
-
-    if uncategorized_skills:
-        for skill in uncategorized_skills:
-            st.write("•", skill)
-    else:
-        st.write("No uncategorized skills detected")
-
     st.subheader("💪 Skill Strength Analysis")
 
     for skill, count in skill_freq.items():
