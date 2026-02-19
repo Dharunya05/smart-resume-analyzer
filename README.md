@@ -1,117 +1,86 @@
 📄 Smart Resume Analyzer & Skill Gap Detector
 
-A Streamlit-based web application that analyzes a user’s resume against a job description to extract skills, calculate match percentage, identify skill gaps, and provide a learning roadmap.
+A Streamlit-based application that analyzes a resume against a job description to identify matched skills, missing skills, and learning recommendations.
+This project is built mainly for learning and resume improvement purposes.
 
-🔗 Live App: https://smart-resume-analyzer-rq4h2lyjrfxaieqzyn4tc6.streamlit.app/~/+/#what-this-app-does
+🎯 Objective
 
+1) Extract skills from resumes (text-based and scanned PDFs)
+
+2) Compare resume skills with a job description
+
+3) Calculate a resume–JD match percentage
+
+4) Identify missing skills and suggest learning roadmaps
 
 🚀 Features
 
-✅ Resume Skill Extraction:
+Supports text-based and image-based PDF resumes (OCR)
 
-Extracts technical skills from text-based PDF resumes
+Category-based skill extraction
 
-Supports skills like Python, SQL, Power BI, Excel, ML, Data Science, AI, Statistics
+Skill normalization (e.g., ML → Machine Learning)
 
-✅ Job Description Skill Analysis:
+Skill frequency and strength analysis
 
-Extracts required skills directly from the Job Description
+Matched & missing skill detection
 
-Compares resume skills with JD skills dynamically
+Learning roadmap with useful links
 
-✅ Resume–Job Match Score:
+🧠 Completed Levels
 
-Calculates match percentage based on matched skills
+Level 1 – Resume Text Extraction
 
-Helps users understand their suitability for a role
+PDF text extraction using pdfplumber
 
-✅ Skill Gap Detection:
+OCR fallback using pytesseract for scanned resumes
 
+Level 2 – Skill Extraction
 
-Clearly shows:
+Predefined skill categories
 
-🟢 Matched Skills
+Exact phrase matching
 
-🔴 Missing Skills
+Section-aware skill detection
 
+Level 3 – Skill Analysis
 
-✅ Skill Strength Analysis:
+Skill normalization & synonyms
 
-Measures how strongly each skill appears in the resume
-
-Categorizes skills as High / Medium / Low based on frequency
-
-✅ Skill Coverage Visualization:
-
-Visual progress bars showing:
-
-How much each JD skill is covered in the job description
-
-Relative importance of skills in the JD
-
-✅ Learning Roadmap:
-
-Provides step-by-step learning guidance for missing skills
-
-Helps users plan upskilling effectively
-
-🛠️ Tech Stack:
-
-Python
-
-Streamlit
-
-pdfplumber
-
-Regular Expressions (Regex)
-
-GitHub
-
-Streamlit Community Cloud
-
-📌 How It Works:
-
-Upload a text-based PDF resume
-
-Paste the Job Description
-
-App performs:
-
-Resume text extraction
-
-Skill identification
-
-Skill matching & gap analysis
+Resume–JD comparison
 
 Match score calculation
 
-Skill strength & coverage analysis
-
-Results and learning roadmap are displayed instantly
+Skill gap explanation and roadmap generation
 
 
-⚠️ Limitations:
+🛠️ Tech Stack
 
-Supports only text-based PDFs (scanned/image resumes not supported yet)
+1) Python
 
-Skill extraction is currently rule-based
+2) Streamlit
 
-AI/NLP-based extraction planned in future versions
+3) pdfplumber
 
+4) pytesseract
 
-🔮 Future Enhancements:
+5) pdf2image
 
-AI-powered skill extraction using NLP
-
-Support for synonyms (e.g., ML ↔ Machine Learning)
-
-Scanned resume (OCR) support
-
-Resume improvement suggestions
-
-Role-based skill weighting
+6) Regular Expressions
 
 
-⭐ If you like this project:
+⚠️ Known Limitation
 
-Give it a ⭐ on GitHub — it motivates further improvements!
+Skill frequency is based on word-boundary matching
+
+Advanced contextual NLP is not implemented (intentional for learning stage)
+
+▶️ How to Run
+
+pip install streamlit pdfplumber pytesseract pdf2image
+streamlit run app.py
+
+📌 Conclusion
+
+This project demonstrates a complete resume analysis pipeline with clear logic, honest limitations, and learning-focused design.
+It is suitable for academic projects and portfolio use.
