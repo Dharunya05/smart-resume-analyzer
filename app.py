@@ -150,6 +150,13 @@ def skill_gap_analysis(resume_skills, job_skills):
 
     return matched, missing
 
+def explain_skill_gap(skill):
+    return [
+        f"{skill.upper()} is mentioned in the Job Description",
+        f"{skill.upper()} was not found in your resume",
+        f"Learning or adding {skill.upper()} can improve your match score"
+    ]
+
 def calculate_match_score(matched, total):
     if total == 0:
         return 0
@@ -321,6 +328,14 @@ if uploaded_file and job_desc:
                 st.error(skill.upper())
         else:
             st.write("No missing skills 🎉")
+    
+    st.subheader("🧠 Why these skills are missing?")
+
+    for skill in missing:
+        st.markdown(f"### 🔍 {skill.upper()}")
+        reasons = explain_skill_gap(skill)
+        for reason in reasons:
+            st.write("•", reason)
 
     st.subheader("📊 Skill Coverage Visualization")
     for skill, count in job_skill_counts.items():
