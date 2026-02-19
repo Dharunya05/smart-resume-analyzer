@@ -136,9 +136,16 @@ def extract_skills_dynamic(text):
 
 def skill_frequency(text, skills):
     frequency = {}
+
     for skill in skills:
-        count = text.count(skill.lower())
-        frequency[skill.upper()] = count
+        skill_lower = skill.lower()
+
+        # word-boundary match (fixes C, R, Go issues)
+        pattern = r'\b' + re.escape(skill_lower) + r'\b'
+        matches = re.findall(pattern, text)
+
+        frequency[skill.upper()] = len(matches)
+
     return frequency
 
 def skill_gap_analysis(resume_skills, job_skills):
@@ -221,7 +228,10 @@ Upload your resume and compare it with a job description to:
 3. View skill analysis and recommendations
 """)
 
-st.info("ℹ️ Note: Currently supports text-based resumes. Scanned/image-based resumes will be added in future versions.")
+st.info(
+    "ℹ️ Note: This app supports both text-based and scanned (image-based) PDF resumes. "
+    "For scanned resumes, OCR is used, so accuracy may depend on the resume image quality."
+)
 
 uploaded_file = st.file_uploader("Upload your Resume (PDF)", type="pdf")
 job_desc = st.text_area("Paste Job Description")
